@@ -216,5 +216,4 @@ demo.py
 .env
 template.py
 train_test.py
-model/
 model_testing.py
