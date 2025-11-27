@@ -1,8 +1,11 @@
 import sys
+import os
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Literal
 from uvicorn import run as app_run
@@ -14,6 +17,17 @@ from src.logger import logging
 
 # Initialize the FastAPI application
 app = FastAPI(title="AI News Classifier Backend")
+
+# Get absolute path to static directory (works in both local and Docker)
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+# Serve static assets (e.g., favicons, images)
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    logging.info(f"Static files mounted from: {STATIC_DIR}")
+else:
+    logging.warning(f"Static directory not found at: {STATIC_DIR}")
 
 # Setup Jinja2 for rendering HTML pages
 templates = Jinja2Templates(directory="templates")
