@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --root-user-action=ignore -r requirements.txt && \
     python -m nltk.downloader punkt stopwords wordnet
 
 RUN pip install -e .
