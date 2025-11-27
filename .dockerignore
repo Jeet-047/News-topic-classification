@@ -1,0 +1,16 @@
+artifact
+venv
+env
+.gitignore
+logs
+template.py
+demo.py
+README.md
+LICENSE
+src.egg.-info
+notebook
+train_test.py
+projectflow.txt
+model_testing.py
+credentials.py
+news_env

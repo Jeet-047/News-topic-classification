@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  PYTHON_VERSION: "3.11"
+  DOCKER_IMAGE: "news-topic-classifier"
+  MODEL_SENSITIVE_PATHS: "config/model.yaml src/components/model_trainer.py src/components/model_evaluation.py src/components/data_transformation.py src/constants/__init__.py"
+
+jobs:
+  test-train-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run smoke checks
+        run: |
+          python -m compileall src
+          python -m pip check
+
+      - name: Detect model-impacting changes
+        id: model_changes
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE_SHA" ]; then
+            BASE_SHA="${{ github.event.before }}"
+          fi
+          if [ -z "$BASE_SHA" ]; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+
+          echo "Comparing changes against $BASE_SHA"
+          git fetch origin "$BASE_SHA" --depth=1 || true
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" HEAD || true)"
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          SHOULD_TRAIN="false"
+          for path in ${{ env.MODEL_SENSITIVE_PATHS }}; do
+            if echo "$CHANGED_FILES" | grep -F "$path" >/dev/null 2>&1; then
+              SHOULD_TRAIN="true"
+              break
+            fi
+          done
+
+          echo "run_training=$SHOULD_TRAIN" >> "$GITHUB_OUTPUT"
+
+      - name: Run training pipeline
+        if: steps.model_changes.outputs.run_training == 'true'
+        env:
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+        run: python src/pipline/training_pipeline.py
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg GIT_SHA="${{ github.sha }}" \
+            -t "${{ env.DOCKER_IMAGE }}:${{ github.sha }}" \
+            -t "${{ env.DOCKER_IMAGE }}:latest" \
+            .
+

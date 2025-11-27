@@ -205,3 +205,16 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+news_env
+artifact
+logs
+notebook/
+credentials.txt
+demo.py
+.env
+template.py
+train_test.py
+model/
+model_testing.py

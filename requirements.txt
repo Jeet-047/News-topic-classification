@@ -1,0 +1,18 @@
+ipykernel
+pandas
+numpy
+matplotlib
+gensim
+scikit-learn
+nltk
+from_root
+dill
+pymongo
+certifi
+python-dotenv
+PyYAML
+fastapi
+pydantic
+uvicorn
+jinja2
+-e .

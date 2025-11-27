@@ -1,0 +1,10 @@
+columns:
+  - Class Index: int
+  - Title: object
+
+
+numerical_column:
+  - Class Index
+
+object_column:
+  - Title
